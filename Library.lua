@@ -2757,76 +2757,112 @@ do
     Library.WatermarkText = WatermarkLabel;
     Library:MakeDraggable(Library.Watermark);
 
-    local LoaderOuter = Library:Create('Frame', {
-        BorderColor3 = Color3.new(0, 0, 0);
-        Position = UDim2.new(0.5, -106, 0.5, -10); -- Centered on screen
-        Size = UDim2.new(0, 213, 0, 20);
-        ZIndex = 200;
-        Parent = ScreenGui;
-    });
+    -- Create the main loading frame
+local LoaderOuter = Library:Create('Frame', {
+    BorderColor3 = Color3.new(0, 0, 0);
+    Position = UDim2.new(0.5, -106, 0.5, -10); -- Centered on screen
+    Size = UDim2.new(0, 213, 0, 20);
+    ZIndex = 200;
+    Parent = ScreenGui;
+});
 
-    local LoaderInner = Library:Create('Frame', {
-        BackgroundColor3 = Library.MainColor;
-        BorderColor3 = Library.AccentColor;
-        BorderMode = Enum.BorderMode.Inset;
-        Size = UDim2.new(0, 0, 1, 0); -- Initially 0 width
-        ZIndex = 201;
-        Parent = LoaderOuter;
-    });
-    
-    Library:AddToRegistry(LoaderInner, {
-        BackgroundColor3 = 'MainColor';
-        BorderColor3 = 'AccentColor';
-    });
+-- Create an inner frame to hold the loading bar
+local LoaderInner = Library:Create('Frame', {
+    BackgroundColor3 = Library.MainColor;
+    BorderColor3 = Library.AccentColor;
+    BorderMode = Enum.BorderMode.Inset;
+    Size = UDim2.new(0, 0, 1, 0); -- Initially 0 width
+    ZIndex = 201;
+    Parent = LoaderOuter;
+});
 
-    local InnerFrame = Library:Create('Frame', {
-        BackgroundColor3 = Color3.new(1, 1, 1);
-        BorderSizePixel = 0;
-        Position = UDim2.new(0, 1, 0, 1);
-        Size = UDim2.new(1, -2, 1, -2);
-        ZIndex = 202;
-        Parent = LoaderInner;
+Library:AddToRegistry(LoaderInner, {
+    BackgroundColor3 = 'MainColor';
+    BorderColor3 = 'AccentColor';
+});
+
+-- Create an inner frame for the loading bar
+local InnerFrame = Library:Create('Frame', {
+    BackgroundColor3 = Color3.new(1, 1, 1);
+    BorderSizePixel = 0;
+    Position = UDim2.new(0, 1, 0, 1);
+    Size = UDim2.new(1, -2, 1, -2);
+    ZIndex = 202;
+    Parent = LoaderInner;
+});
+
+-- Add a gradient effect to the loading bar
+local Gradient = Library:Create('UIGradient', {
+    Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Library:GetDarkerColor(Library.MainColor)),
+        ColorSequenceKeypoint.new(1, Library.MainColor),
     });
-    
-    local Gradient = Library:Create('UIGradient', {
-        Color = ColorSequence.new({
+    Rotation = -90;
+    Parent = InnerFrame;
+});
+
+Library:AddToRegistry(Gradient, {
+    Color = function()
+        return ColorSequence.new({
             ColorSequenceKeypoint.new(0, Library:GetDarkerColor(Library.MainColor)),
             ColorSequenceKeypoint.new(1, Library.MainColor),
         });
-        Rotation = -90;
-        Parent = InnerFrame;
-    });
-
-    Library:AddToRegistry(Gradient, {
-        Color = function()
-            return ColorSequence.new({
-                ColorSequenceKeypoint.new(0, Library:GetDarkerColor(Library.MainColor)),
-                ColorSequenceKeypoint.new(1, Library.MainColor),
-            });
-        end
-    });
-    
-    -- Create a label to display the loading progress
-    local LoaderLabel = Library:CreateLabel({
-        Position = UDim2.new(0, 5, 0, 0);
-        Size = UDim2.new(1, -4, 1, 0);
-        TextSize = 14;
-        TextXAlignment = Enum.TextXAlignment.Left;
-        ZIndex = 203;
-        Parent = InnerFrame;
-    });
-    
-    Library.Loader = LoaderOuter;
-    Library.LoaderText = LoaderLabel;
-    
-    -- Example function to update the loading bar
-    function Library:UpdateLoader(progress)
-        LoaderInner.Size = UDim2.new(progress, 0, 1, 0); -- Update width based on progress
-        LoaderLabel.Text = string.format("Loading... %d%%", progress * 100);
     end
+});
 
-    -- Make the loader draggable
-    Library:MakeDraggable(Library.Loader);
+-- Create a label to display the loading progress
+local LoaderLabel = Library:CreateLabel({
+    Position = UDim2.new(0, 5, 0, 0);
+    Size = UDim2.new(1, -4, 1, 0);
+    TextSize = 14;
+    TextXAlignment = Enum.TextXAlignment.Left;
+    ZIndex = 203;
+    Parent = InnerFrame;
+});
+
+Library.Loader = LoaderOuter;
+Library.LoaderText = LoaderLabel;
+
+-- Example function to update the loading bar
+function Library:UpdateLoader(progress)
+    LoaderInner.Size = UDim2.new(progress, 0, 1, 0); -- Update width based on progress
+    LoaderLabel.Text = string.format("Loading... %d%%", progress * 100);
+end
+
+-- Disable other content until loading is complete
+local function disableContent()
+    for _, v in pairs(ScreenGui:GetChildren()) do
+        if v ~= Library.Loader then
+            v.Visible = false
+        end
+    end
+end
+
+local function enableContent()
+    for _, v in pairs(ScreenGui:GetChildren()) do
+        if v ~= Library.Loader then
+            v.Visible = true
+        end
+    end
+end
+
+-- Function to simulate loading process
+function Library:StartLoading()
+    disableContent()
+    for i = 0, 1, 0.01 do
+        wait(0.05) -- Simulate loading delay
+        self:UpdateLoader(i)
+    end
+    enableContent()
+    Library.Loader.Visible = false -- Hide the loader once loading is done
+end
+
+-- Start the loading process
+Library:StartLoading()
+
+-- Make the loader draggable
+Library:MakeDraggable(Library.Loader);
+
 
 
 
